@@ -1,2 +1,5 @@
 # corona_data_dk
-easily accesible data on the covid19 outbreak in Denmark 
+Easily accesible data on the covid19 outbreak in Denmark 
+
+## Data sources
+Data is taken from [John Hopkins University Corona Virus Github](https://github.com/CSSEGISandData/COVID-19)
