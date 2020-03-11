@@ -41,8 +41,12 @@ confirmed_data <- get_clean_data(confirmed_url, case_type="confirmed")
 deceased_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv"
 deceased_data <- get_clean_data(deceased_url, case_type="deceased")
 
+recovered_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv"
+recovered_data <- get_clean_data(recovered_url, case_type="recovered")
+
 combined_df <- confirmed_data %>% 
   left_join(deceased_data, by="date") %>% 
+  left_join(recovered_data, by="date") %>% 
   filter(confirmed > 0)
 
 write_csv(combined_df, "corona_data_dk.csv")
