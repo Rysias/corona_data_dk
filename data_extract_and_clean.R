@@ -45,6 +45,4 @@ combined_df <- confirmed_data %>%
   left_join(deceased_data, by="date") %>% 
   filter(confirmed > 0)
 
-
-
-
+write_csv(combined_df, "corona_data_dk.csv")
