@@ -12,7 +12,8 @@ clean_data <- function(df, case_type) {
   df %>% 
     rename(CountryOrRegion = "Country/Region", 
            ProvinceOrState = "Province/State") %>%
-    filter(CountryOrRegion == "Denmark") %>% 
+    # Filtering out Faroe Islands
+    filter(CountryOrRegion == "Denmark" & ProvinceOrState == "Denmark") %>% 
     # Select all the columns with dates
     select(matches("\\d")) %>% 
     gather(key = date, value = !!as.symbol(case_type)) %>% 
