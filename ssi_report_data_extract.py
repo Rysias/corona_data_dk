@@ -11,17 +11,19 @@ from datetime import datetime
 from urllib import error
 
 
-def get_daily_url():
-    formatted_date = DATE.strftime("%d%m%Y")
-    return f"https://files.ssi.dk/COVID19-overvaagningsrapport-{formatted_date}"
-
-
 def get_data_tables():
+    formatted_date = DATE.strftime("%d%m%Y")
+    daily_url = f"https://files.ssi.dk/COVID19-overvaagningsrapport-{formatted_date}"
     try:
-        return camelot.read_pdf(DAILY_URL, pages="all")
+        return camelot.read_pdf(daily_url, pages="all")
     except error.HTTPError:
-        print("no article for the day")
-        sys.exit()
+        try:
+            new_daily_url = f"https://www.ssi.dk/-/media/arkiv/dk/aktuelt/sygdomsudbrud/covid19-rapport/covid19-overvaagningsrapport-{formatted_date}.pdf?la=da"
+            return camelot.read_pdf(new_daily_url, pages="all")
+        except error.HTTPError:
+            print("no article for the day")
+            sys.exit()
+
 
 def table_header(table_df):
     try:
@@ -66,7 +68,7 @@ def reorder_columns(df):
 def add_date(df):
     """ for I/O stuff it makes more sense to keep date as a string """
     date_col = DATE.strftime("%Y-%m-%d")
-    return reorder_columns(df.assign(date = date_col))
+    return reorder_columns(df.assign(date=date_col))
 
 
 def get_clean_regional():
@@ -79,7 +81,7 @@ def get_clean_regional():
     # add date
     df["date"] = DATE
 
-    #clean datatypes
+    # clean datatypes
     clean_int_cols(df, ["confirmed", "population"])
 
     return add_date(df)
@@ -87,7 +89,9 @@ def get_clean_regional():
 
 def clean_int_cols(df, int_cols):
     """ fixes the dtype of those pesky "."-thousand seperators! """
-    df[int_cols] = df[int_cols].astype("object").replace("\.", "", regex=True).astype("int32")
+    df[int_cols] = df[int_cols].astype("object") \
+                               .replace("\.", "", regex=True) \
+                               .astype("int32")
 
 
 def get_clean_age():
@@ -121,8 +125,6 @@ def concat_and_write(df, df_type="regional"):
 # Setting the date
 DATE = current_date()
 # DATE = datetime(2020, 3, 13).date()
-
-DAILY_URL = get_daily_url()
 
 print("Reading the report of the day...")
 ALL_TABLES = get_data_tables()
