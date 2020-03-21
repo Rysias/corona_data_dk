@@ -32,6 +32,7 @@ def table_header(table_df):
         return ""
 
 
+
 def is_ages(table_df):
     return table_header(table_df).startswith("Aldersgrupper \nLaboratorieb")
 
@@ -41,14 +42,13 @@ def is_regional(table_df):
             table_df.loc[1, 0] == "København by"
 
 
-def get_ages_df():
+def get_df(type_func):
+    """
+    gets a certain df based on the type function (that should
+    return a bool)
+    """
     return next(table.df.copy() for table in ALL_TABLES if
-                is_ages(table.df))
-
-
-def get_regional_df():
-    return next(table.df.copy() for table in ALL_TABLES
-                if is_regional(table.df))
+                type_func(table.df))
 
 
 def set_column_names(df):
@@ -72,7 +72,7 @@ def add_date(df):
 
 
 def get_clean_regional():
-    df = get_regional_df()
+    df = get_df(is_regional)
     # setting col_names
     regional_colnames = ["region", "confirmed", "population", "X"]
     df.columns = regional_colnames
@@ -98,7 +98,7 @@ def get_clean_age():
     """
     Removes aggregate rows and columns, renames columns and converts data types
     """
-    df = get_ages_df()
+    df = get_df(is_ages)
 
     # set col_names
     age_colnames = ["ageGroup", "confirmed", "tested", "X"]
@@ -112,19 +112,60 @@ def get_clean_age():
     return add_date(df)
 
 
+def is_hospital(table_df):
+    return table_header(table_df).startswith("Antal \nHeraf indlagte \n")
+
+
+def fix_newline(df, col_name):
+    """
+    fixes an annoying problem where a row consists of new-lines in
+    the first columns instead of a value per column
+    """
+    problem_rows = df[col_name].str.contains("\n")
+    fixed_rows = df.loc[problem_rows, col_name].str.split("\n").to_list()
+    joined_df = pd.concat((df[~problem_rows],
+                           pd.DataFrame(fixed_rows, columns=df.columns)))
+    return joined_df.reset_index(drop=True)
+
+
+def get_clean_hospital():
+    """ gets the table of hospital cases per region """
+    df = get_df(is_hospital)
+
+    # set col_names
+    hospital_colnames = ["region", "hospitalized", "intensive_care",
+                         "in_ventilation"]
+    df.columns = hospital_colnames
+
+
+    # filtering out totals and junk rows
+    df = df.loc[range(1, 6)].reset_index(drop=True)
+
+    # Fixing newline bug
+    df = fix_newline(df, "region")
+
+    # cleaning dtypes
+    clean_int_cols(df, ["hospitalized", "intensive_care", "in_ventilation"])
+    return add_date(df)
+
+
 def current_date():
     return datetime.now().date()
 
 
 def concat_and_write(df, df_type="regional"):
-    old_df = pd.read_csv(f"corona_{df_type}_data.csv")
-    combined = pd.concat([old_df, df]).drop_duplicates()
+    try:
+        old_df = pd.read_csv(f"corona_{df_type}_data.csv")
+    except FileNotFoundError:
+        df.to_csv(f"corona_{df_type}_data.csv", index=False)
+        return ""
+    combined = pd.concat([old_df, df]).drop_duplicates().sort_values(["date"])
     combined.to_csv(f"corona_{df_type}_data.csv", index=False)
 
 
 # Setting the date
 DATE = current_date()
-# DATE = datetime(2020, 3, 13).date()
+DATE = datetime(2020, 3, 21).date()
 
 print("Reading the report of the day...")
 ALL_TABLES = get_data_tables()
@@ -132,15 +173,11 @@ print("done!")
 
 age_df = get_clean_age()
 regional_df = get_clean_regional()
+hospitalized_df = get_clean_hospital()
 
 print("writing data")
 # Adding to the old data
 concat_and_write(regional_df, df_type="regional")
 concat_and_write(age_df, df_type="age")
+concat_and_write(hospitalized_df, df_type="hospitalized")
 print("done!")
-
-# =============================================================================
-# age_df.to_csv("corona_age_data.csv", index=False)
-# regional_df.to_csv("corona_regional_data.csv", index=False)
-# print("done")
-# =============================================================================
