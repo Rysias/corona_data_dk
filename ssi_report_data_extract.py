@@ -165,7 +165,7 @@ def concat_and_write(df, df_type="regional"):
 
 # Setting the date
 DATE = current_date()
-DATE = datetime(2020, 3, 21).date()
+#DATE = datetime(2020, 3, 21).date()
 
 print("Reading the report of the day...")
 ALL_TABLES = get_data_tables()
