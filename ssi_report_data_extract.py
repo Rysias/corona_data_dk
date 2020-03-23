@@ -113,7 +113,7 @@ def get_clean_age():
 
 
 def is_hospital(table_df):
-    return table_header(table_df).startswith("Antal \nHeraf indlagte \n")
+    return table_header(table_df).startswith("Antal \nHeraf")
 
 
 def fix_newline(df, col_name):
