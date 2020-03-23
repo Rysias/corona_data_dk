@@ -13,7 +13,7 @@ from urllib import error
 
 def get_data_tables():
     formatted_date = DATE.strftime("%d%m%Y")
-    daily_url = f"https://files.ssi.dk/COVID19-overvaagningsrapport-{formatted_date}"
+    daily_url = f"https://files.ssi.dk/COVID19-overvaagningsrapport-{formatted_date}.pdf"
     try:
         return camelot.read_pdf(daily_url, pages="all")
     except error.HTTPError:
