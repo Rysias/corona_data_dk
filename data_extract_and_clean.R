@@ -7,13 +7,14 @@
 library(tidyverse)
 library(RCurl)
 
+
 # Helper functions
 clean_data <- function(df, case_type) {
   df %>% 
     rename(CountryOrRegion = "Country/Region", 
            ProvinceOrState = "Province/State") %>%
     # Filtering out Faroe Islands
-    filter(CountryOrRegion == "Denmark" & ProvinceOrState == "Denmark") %>% 
+    filter(CountryOrRegion == "Denmark" & !ProvinceOrState %in% c("Faroe Islands", "Greenland")) %>% 
     # Select all the columns with dates
     select(matches("\\d")) %>% 
     gather(key = date, value = !!as.symbol(case_type)) %>% 
@@ -36,13 +37,13 @@ get_clean_data <- function(data_url, case_type = "confirmed") {
 
 
 # Getting the data
-confirmed_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"
+confirmed_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 confirmed_data <- get_clean_data(confirmed_url, case_type="confirmed")
 
-deceased_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv"
+deceased_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 deceased_data <- get_clean_data(deceased_url, case_type="deceased")
 
-recovered_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv"
+recovered_url <- "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"
 recovered_data <- get_clean_data(recovered_url, case_type="recovered")
 
 combined_df <- confirmed_data %>% 
